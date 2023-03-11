@@ -74,7 +74,7 @@ class Vypujcka():
         return pocet
 
     def zalozVypujcku(rc,isbn):
-        if(Kniha.kontrolaPoctu(isbn)>0):
+        if(Kniha.kontrolaPoctu(isbn)>0 and Vypujcka.kontrolaVypujcky(isbn,rc)==0):
             insert = "INSERT INTO Vypujcka(isbn,rc,datum_vypujceni) VALUES(?,?,DATETIME('now'))"
             cursor = conn.cursor()
             cursor.execute(insert,[isbn,rc])
@@ -82,11 +82,11 @@ class Vypujcka():
             Kniha.uberPocet(isbn)
             print("Vypujcka zalozena")
         else:
-            print("Neni dostatek knih")
+            print("Nelze zalozit vypujcku, jiz existuje nebo neni dostatek knih")
 
 
     def uzavriVypujcku(rc, isbn):
-        try:
+        if(Vypujcka.kontrolaVypujcky(isbn,rc)==1):
             insert = """
             INSERT INTO Vypujcka_old(isbn,rc,datum_vypujceni) 
             SELECT isbn, rc, datum_vypujceni FROM Vypujcka WHERE isbn = ? AND rc = ?
@@ -94,23 +94,24 @@ class Vypujcka():
             cursor = conn.cursor()
             cursor.execute(insert,(isbn,rc))
             conn.commit()
-        except:
-            print("Vypujcka teto knihy pro tohoto cloveka neexistuje")
 
-        else:
             delete = "DELETE FROM Vypujcka WHERE isbn=? AND rc = ?"
             cursor = conn.cursor()
             cursor.execute(delete,(isbn, rc))
             conn.commit()
             print("Vypujcka uzavrena")
             Kniha.pridejPocet(isbn)
+        
+        else:
+            print("Vypujcka teto knihy pro tohoto cloveka neexistuje")
+            
 
 
 
 Kniha("nejakerandomisbn","How to python","Adam",2022,1)
 Zakaznik("Adam", "Pech", 9909094349)
-Vypujcka.zalozVypujcku(9909094349,"nejakerandomisbn")
 Vypujcka.uzavriVypujcku(9909094349,"nejakerandomisbn")
+
 
 
 
